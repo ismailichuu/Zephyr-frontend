@@ -36,7 +36,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname === "/signin" || pathname === "/signup") {
+  if (pathname === "/signin" || pathname === "/signup" || pathname === '/') {
     if (token) {
       try {
         const payload = JSON.parse(

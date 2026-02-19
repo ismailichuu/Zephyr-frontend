@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,6 +20,7 @@ import {
 } from "@/components/atomic/atoms";
 import { AppLogo, AuthFooterLink, AuthHeading } from "@/components/atomic/molecules";
 import { AuthPageShell } from "@/components/atomic/templates";
+import { useToast } from "@/components/providers/toast-provider";
 import { signup } from "@/lib/api/auth/signup.api";
 
 const signupSchema = z
@@ -38,6 +39,9 @@ const signupSchema = z
   });
 
 type SignupValues = z.infer<typeof signupSchema>;
+const AUTH_ERROR_CODE_TO_MESSAGE: Record<string, string> = {
+  ROLE_MISMATCH: "This Google account is already registered with a different role.",
+};
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -48,6 +52,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export function SignupForm({ role }: { role: "freelancer" | "client" }) {
   const router = useRouter();
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +68,32 @@ export function SignupForm({ role }: { role: "freelancer" | "client" }) {
       agreedToTerms: false,
     },
   });
+
+  useEffect(() => {
+    const cookiePrefix = "authErrorToast=";
+    const authErrorCookie = document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith(cookiePrefix));
+    const cookieMessage = authErrorCookie ? decodeURIComponent(authErrorCookie.slice(cookiePrefix.length)) : "";
+
+    const currentUrl = new URL(window.location.href);
+    const errorCode = currentUrl.searchParams.get("authErrorCode");
+    const urlMessage = errorCode ? AUTH_ERROR_CODE_TO_MESSAGE[errorCode] ?? "Authentication failed. Please try again." : "";
+    const authError = cookieMessage || urlMessage;
+
+    if (authError) {
+      toast.error(authError);
+    }
+
+    if (cookieMessage) {
+      document.cookie = "authErrorToast=; path=/; max-age=0";
+    }
+
+    if (errorCode) {
+      currentUrl.searchParams.delete("authErrorCode");
+      window.history.replaceState({}, "", `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+    }
+  }, [toast]);
 
   async function onCreateAccount(values: SignupValues) {
     try {

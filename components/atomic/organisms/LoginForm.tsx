@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,9 @@ const loginSchema = z.object({
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
+const AUTH_ERROR_CODE_TO_MESSAGE: Record<string, string> = {
+  ROLE_MISMATCH: "This Google account is already registered with a different role.",
+};
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -32,7 +35,6 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export function LoginForm({ isAdmin = false }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,17 +56,30 @@ export function LoginForm({ isAdmin = false }) {
   useEffect(() => {
     if (isAdmin) return;
 
-    const authError =
-      searchParams.get("authError") ??
-      searchParams.get("message") ??
-      searchParams.get("error_description") ??
-      searchParams.get("error");
+    const cookiePrefix = "authErrorToast=";
+    const authErrorCookie = document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith(cookiePrefix));
+    const cookieMessage = authErrorCookie ? decodeURIComponent(authErrorCookie.slice(cookiePrefix.length)) : "";
 
-    if (!authError) return;
+    const currentUrl = new URL(window.location.href);
+    const errorCode = currentUrl.searchParams.get("authErrorCode");
+    const urlMessage = errorCode ? AUTH_ERROR_CODE_TO_MESSAGE[errorCode] ?? "Authentication failed. Please try again." : "";
+    const authError = cookieMessage || urlMessage;
 
-    toast.error(authError);
-    router.replace("/signin");
-  }, [isAdmin, router, searchParams, toast]);
+    if (authError) {
+      toast.error(authError);
+    }
+
+    if (cookieMessage) {
+      document.cookie = "authErrorToast=; path=/; max-age=0";
+    }
+
+    if (errorCode) {
+      currentUrl.searchParams.delete("authErrorCode");
+      window.history.replaceState({}, "", `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+    }
+  }, [isAdmin, toast]);
 
   async function onLogin(values: LoginValues) {
     try {

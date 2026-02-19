@@ -11,6 +11,7 @@ import { AuthPageShell } from "@/components/atomic/templates";
 import { verifyOtp } from "@/lib/api/auth/verify-otp.api";
 import { setUser } from "@/store/slices/user.slice";
 import { resendOtp } from "@/lib/api/auth/resend-otp.api";
+import { useToast } from "@/components/providers/toast-provider";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -27,6 +28,7 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
   const [seconds, setSeconds] = useState(0);
   const dispatch = useDispatch();
   const router = useRouter();
+  const toast = useToast();
 
   const handleVerify = async () => {
     if (!code || code.length !== 6) {
@@ -43,8 +45,10 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
 
       if (!isForgot && user) {
         dispatch(setUser(user));
+        toast.success('Authenticated');
         router.replace(`/${user.role.toLowerCase()}`);
       } else {
+        toast.success('Otp Sent Successfully');
         router.replace("/forgot-password/reset");
       }
     } catch (error: unknown) {

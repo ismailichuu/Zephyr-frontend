@@ -50,7 +50,7 @@ export default function RoleSelector({ flow = "signup" }: { flow?: RoleSelectorF
 
       <p className="text-center text-muted-foreground">
         {flow === 'signup' ? 
-            "Choose how you&apos;d like to get started" : "Choose your previous Role"}</p>
+            "Choose how you'd like to get started" : "Choose your previous Role"}</p>
 
       <div className="grid grid-cols-2 gap-4">
         {roles.map((role) => (
