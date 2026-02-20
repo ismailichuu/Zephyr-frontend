@@ -5,3 +5,4 @@ export { default as RoleSelector } from "./RoleSelector";
 export { default as EmailVerification } from "./EmailVerification";
 export { default as ResetPassword } from "./ResetPassword";
 export { default as FreelancerCompleteProfile } from "./FreelancerCompleteProfile";
+export { default as AdminUserManagement } from "./AdminUserManagement";
