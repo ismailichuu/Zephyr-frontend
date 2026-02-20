@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -30,6 +30,10 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
   const router = useRouter();
   const toast = useToast();
 
+  useEffect(() => {
+    startTimer();
+  }, []);
+
   const handleVerify = async () => {
     if (!code || code.length !== 6) {
       setOtpError("OTP must be 6 digits");
@@ -48,7 +52,7 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
         toast.success('Authenticated');
         router.replace(`/${user.role.toLowerCase()}`);
       } else {
-        toast.success('Otp Sent Successfully');
+        toast.success('Otp Verified Successfully');
         router.replace("/forgot-password/reset");
       }
     } catch (error: unknown) {

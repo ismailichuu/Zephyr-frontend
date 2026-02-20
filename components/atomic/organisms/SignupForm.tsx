@@ -104,7 +104,7 @@ export function SignupForm({ role }: { role: "freelancer" | "client" }) {
         password: values.password,
         role: role.toUpperCase(),
       });
-
+      toast.success('Email Sent Successfully');
       router.push("/signup/otp-verification");
     } catch (err: unknown) {
       form.setError("root", {
