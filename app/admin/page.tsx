@@ -1,31 +1,30 @@
-"use client";
-
 import { AdminUserManagement } from "@/components/atomic/organisms";
-import { logOut } from "@/lib/api/auth/logout.api";
-import type { RootState } from "@/store";
-import { clearUser } from "@/store/slices/user.slice";
-import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
+import { getAllUsers } from "@/lib/api/admin/get-all-users.api";
 
-export default function AdminPage() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const userName = useSelector((state: RootState) => state.user.name);
+type Props = {
+  searchParams: {
+    page?: string;
+    limit?: string;
+    search?: string;
+  }
+}
 
-  const onLogoutHandler = async () => {
-    try {
-      await logOut();
-      dispatch(clearUser());
-      router.replace("/signin");
-    } catch {
-      router.replace("/signin");
-    }
-  };
+export default async function AdminPage({ searchParams }: Props) {
+
+  const params = await searchParams;
+
+  const page = Number(params.page) || 1;
+  const limit = Number(params.limit) || 6;
+  const search = params.search || '';
+
+  const res = await getAllUsers(page, limit, search);
 
   return (
-    <AdminUserManagement
-      adminName={userName ?? "Admin"}
-      onLogout={onLogoutHandler}
+    <AdminUserManagement 
+      users={res.users}
+      totalPages={res.totalPages}
+      currentPage={page}
+      totalUser={res.totalUser}
     />
   );
 }

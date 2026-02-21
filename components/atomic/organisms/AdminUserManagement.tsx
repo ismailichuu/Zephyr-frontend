@@ -1,13 +1,9 @@
 "use client";
 
 import {
-  BriefcaseBusiness,
-  Clock3,
-  DollarSign,
-  Download,
-  Filter,
   MoreVertical,
   Search,
+  User,
   UsersRound,
 } from "lucide-react";
 
@@ -30,94 +26,20 @@ import {
   AdminStatCard,
   AdminTopbar,
 } from "@/components/atomic/molecules";
+import { logOut } from "@/lib/api/auth/logout.api";
+import { clearUser } from "@/store/slices/user.slice";
+import { useDispatch } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-type AdminUserManagementProps = {
-  adminName?: string;
-  onLogout: () => void;
-};
-
-type TempUser = {
+type UserType = {
   id: string;
   name: string;
   email: string;
-  type: "Freelancer" | "Client";
-  joined: string;
-  status: "Active" | "Suspended";
+  role: string;
+  joinedAt: Date;
+  status: string;
 };
-
-const TEMP_USERS: TempUser[] = [
-  {
-    id: "u-001",
-    name: "Mohammed Ismail",
-    email: "ismail@gmail.com",
-    type: "Freelancer",
-    joined: "Nov 2025",
-    status: "Active",
-  },
-  {
-    id: "u-002",
-    name: "TechStart Inc",
-    email: "techs@gmail.com",
-    type: "Client",
-    joined: "Nov 2025",
-    status: "Active",
-  },
-  {
-    id: "u-003",
-    name: "Mohammed Ismail",
-    email: "ismail@gmail.com",
-    type: "Freelancer",
-    joined: "Nov 2025",
-    status: "Suspended",
-  },
-  {
-    id: "u-004",
-    name: "Mohammed Ismail",
-    email: "ismail@gmail.com",
-    type: "Freelancer",
-    joined: "Nov 2025",
-    status: "Active",
-  },
-  {
-    id: "u-005",
-    name: "Mohammed Ismail",
-    email: "ismail@gmail.com",
-    type: "Freelancer",
-    joined: "Nov 2025",
-    status: "Active",
-  },
-];
-
-const STAT_CARDS = [
-  {
-    title: "Total Users",
-    value: "12,453",
-    change: "+ 12%",
-    trend: "up" as const,
-    icon: UsersRound,
-  },
-  {
-    title: "Active Jobs",
-    value: "1,234",
-    change: "+ 8%",
-    trend: "up" as const,
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Total Revenue",
-    value: "$543K",
-    change: "+ 23%",
-    trend: "up" as const,
-    icon: DollarSign,
-  },
-  {
-    title: "Pending Reviews",
-    value: "232",
-    change: "- 5%",
-    trend: "down" as const,
-    icon: Clock3,
-  },
-];
 
 function getInitials(name: string) {
   return name
@@ -128,17 +50,63 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-export default function AdminUserManagement({
-  adminName,
-  onLogout,
-}: AdminUserManagementProps) {
+type AdminUserManagmentProps = {
+  users: UserType[];
+  totalPages: number;
+  currentPage: number;
+  totalUser: number;
+}
+
+
+export default function AdminUserManagement({ users, totalPages, currentPage, totalUser }: AdminUserManagmentProps) {
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const [input, setInput] = useState('');
+  const onLogoutHandler = async () => {
+    try {
+      await logOut();
+      dispatch(clearUser());
+      router.replace("/signin");
+    } catch {
+      router.replace("/signin");
+    }
+  };
+
+  const searchParams = useSearchParams();
+  const changePage = (pageNumber: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", pageNumber.toString());
+    params.set("search", input);
+
+    router.push(`/admin?${params.toString()}`, { scroll: false });
+  }
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+
+      if (input) {
+        params.set('search', input);
+      } else {
+        params.delete('search');
+      }
+
+      params.set("page", "1");
+
+      router.replace(`/admin?${params.toString()}`, { scroll: false });
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [input, router, searchParams])
+
   return (
     <div className="bg-muted/30 min-h-screen">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[248px_1fr]">
-        <AdminSidebar onLogout={onLogout} />
+        <AdminSidebar onLogout={onLogoutHandler} />
 
         <main className="flex min-h-screen flex-col">
-          <AdminTopbar adminName={adminName} sectionTitle="User Management" />
+          <AdminTopbar adminName={'Admin'} sectionTitle="User Management" />
 
           <section className="space-y-4 p-4 sm:space-y-6 sm:p-5 md:p-8">
             <div className="bg-card flex items-center gap-2 overflow-x-auto rounded-lg border p-2 lg:hidden">
@@ -159,23 +127,20 @@ export default function AdminUserManagement({
                 variant="outline"
                 size="sm"
                 className="ml-auto shrink-0"
-                onClick={onLogout}
+                onClick={onLogoutHandler}
               >
                 Logout
               </Button>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {STAT_CARDS.map((item) => (
-                <AdminStatCard
-                  key={item.title}
-                  title={item.title}
-                  value={item.value}
-                  change={item.change}
-                  icon={item.icon}
-                  trend={item.trend}
-                />
-              ))}
+              <AdminStatCard
+                title={"Total Users"}
+                value={totalUser.toString()}
+                change={"+ 5%"}
+                icon={UsersRound}
+                trend={"up"}
+              />
             </div>
 
             <Card className="py-0">
@@ -187,19 +152,21 @@ export default function AdminUserManagement({
                       <Input
                         placeholder="Search users..."
                         className="pl-9"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
                         aria-label="Search users"
                       />
                     </div>
-                    <Button type="button" variant="outline">
+                    {/* <Button type="button" variant="outline">
                       <Filter className="size-4" />
                       Filter
-                    </Button>
+                    </Button> */}
                   </div>
 
-                  <Button type="button" className="w-full sm:w-auto">
+                  {/* <Button type="button" className="w-full sm:w-auto">
                     <Download className="size-4" />
                     Export
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <Table className="min-w-190">
@@ -214,58 +181,107 @@ export default function AdminUserManagement({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {TEMP_USERS.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="bg-muted text-muted-foreground grid size-7 place-items-center rounded-full text-xs font-medium">
-                              {getInitials(user.name)}
-                            </span>
-                            <span className="font-medium">{user.name}</span>
+                    {users.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6}>
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-4">
+                              <User className="w-12 h-12 text-muted-foreground" />
+                            </div>
+
+                            <h2 className="text-xl font-semibold">
+                              No Users Found
+                            </h2>
+
+                            <p className="text-gray-500 mt-2 max-w-sm">
+                              We couldn’t find any users matching your search.
+                              Try changing the keyword.
+                            </p>
+
+                            {input && (
+                              <Button
+                                onClick={() => setInput("")}
+                                className="mt-6 px-4 py-2 text-white rounded-md"
+                              >
+                                Clear Search
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {user.email}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{user.type}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {user.joined}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              user.status === "Active" ? "success" : "destructive"
-                            }
-                          >
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button type="button" variant="ghost" size="icon">
-                            <MoreVertical className="size-4" />
-                            <span className="sr-only">Open actions</span>
-                          </Button>
-                        </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="bg-muted text-muted-foreground grid size-7 place-items-center rounded-full text-xs font-medium">
+                                {getInitials(user.name)}
+                              </span>
+                              <span className="font-medium">{user.name}</span>
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="text-muted-foreground">
+                            {user.email}
+                          </TableCell>
+
+                          <TableCell>
+                            <Badge variant="secondary">{user.role}</Badge>
+                          </TableCell>
+
+                          <TableCell className="text-muted-foreground">
+                            {user.joinedAt &&
+                              new Date(user.joinedAt).toDateString()}
+                          </TableCell>
+
+                          <TableCell>
+                            <Badge
+                              variant={
+                                user.status === "ACTIVE"
+                                  ? "success"
+                                  : "destructive"
+                              }
+                            >
+                              {user.status}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className="text-right">
+                            <Button type="button" variant="ghost" size="icon">
+                              <MoreVertical className="size-4" />
+                              <span className="sr-only">Open actions</span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
 
                 <div className="text-muted-foreground flex flex-wrap items-center justify-end gap-2 text-xs">
-                  <button type="button" className="hover:text-foreground">
-                    1
-                  </button>
-                  <button type="button" className="hover:text-foreground">
-                    2
-                  </button>
-                  <button type="button" className="hover:text-foreground">
-                    3
-                  </button>
-                  <button type="button" className="hover:text-foreground">
-                    Next
-                  </button>
+                  {[...Array(totalPages)].map((_, index) => {
+                    const pageNumber = index + 1;
+                    return (
+                      <Button
+                        key={pageNumber}
+                        onClick={() => changePage(pageNumber)}
+                        className={`hover:text-foreground p-1.5 px-3.5 text-white rounded-4xl
+                          ${currentPage === pageNumber ? '' : 'bg-gray-400'}`}
+                        disabled={currentPage === pageNumber}
+                      >
+                        {pageNumber}
+                      </Button>
+                    )
+                  })}
+                  {totalPages > 1 &&
+                    <button type="button"
+                      className="hover:text-foreground p-2 text-white bg-gray-400 rounded-2xl"
+                      onClick={() => changePage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  }
                 </div>
               </CardContent>
             </Card>
