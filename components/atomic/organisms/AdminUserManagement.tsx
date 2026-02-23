@@ -1,10 +1,13 @@
 "use client";
 
 import {
+  Ban,
   MoreVertical,
   Search,
   User,
+  UserCheck,
   UsersRound,
+  UserRound,
 } from "lucide-react";
 
 import {
@@ -12,6 +15,13 @@ import {
   Button,
   Card,
   CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
   Input,
   Table,
   TableBody,
@@ -31,9 +41,10 @@ import { clearUser } from "@/store/slices/user.slice";
 import { useDispatch } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { adminAction } from "@/lib/api/admin/admin-action.api";
 
 type UserType = {
-  id: string;
+  userId: string;
   name: string;
   email: string;
   role: string;
@@ -74,6 +85,22 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
   };
 
   const searchParams = useSearchParams();
+
+  const handleStatusToggle = async (user: UserType) => {
+    const nextStatus = user.status === "BLOCKED" ? "ACTIVE" : "BLOCKED";
+
+    try {
+      await adminAction(user.userId, nextStatus);
+      router.refresh();
+    } catch (error) {
+      console.error("Admin action error:", error);
+    }
+  };
+
+  const handleGoToDetails = (userId: string) => {
+    router.push(`/admin/users/${userId}`);
+  };
+
   const changePage = (pageNumber: number) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", pageNumber.toString());
@@ -211,7 +238,7 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
                       </TableRow>
                     ) : (
                       users.map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user.userId}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <span className="bg-muted text-muted-foreground grid size-7 place-items-center rounded-full text-xs font-medium">
@@ -247,10 +274,63 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
                           </TableCell>
 
                           <TableCell className="text-right">
-                            <Button type="button" variant="ghost" size="icon">
-                              <MoreVertical className="size-4" />
-                              <span className="sr-only">Open actions</span>
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="cursor-pointer"
+                                  aria-label={`Open actions for ${user.name}`}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="sr-only">Open actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+
+                              <DropdownMenuContent align="end" className="w-52">
+                                <DropdownMenuLabel className="truncate">
+                                  {user.name}
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  variant={
+                                    user.status === "ACTIVE"
+                                      ? "destructive"
+                                      : "default"
+                                  }
+                                  className={
+                                    user.status === "BLOCKED"
+                                      ? "cursor-pointer text-green-600 focus:text-green-700"
+                                      : "cursor-pointer"
+                                  }
+                                  onSelect={() => handleStatusToggle(user)}
+                                >
+                                  {user.status === "BLOCKED" ? (
+                                    <UserCheck className="size-4" />
+                                  ) : (
+                                    <Ban className="size-4" />
+                                  )}
+                                  {user.status === "BLOCKED"
+                                    ? "Unblock User"
+                                    : "Block User"}
+                                  <DropdownMenuShortcut>
+                                    {user.status === "BLOCKED"
+                                      ? "ACTIVE"
+                                      : "BLOCK"}
+                                  </DropdownMenuShortcut>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onSelect={() => handleGoToDetails(user.userId)}
+                                  className="cursor-pointer"
+                                >
+                                  <UserRound className="size-4" />
+                                  Go to Details
+                                  <DropdownMenuShortcut>OPEN</DropdownMenuShortcut>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))

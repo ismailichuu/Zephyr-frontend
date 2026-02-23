@@ -7,3 +7,4 @@ export * from "./input";
 export * from "./input-otp";
 export * from "./label";
 export * from "./table";
+export * from "./dropdown-menu";
