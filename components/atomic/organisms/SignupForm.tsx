@@ -22,6 +22,7 @@ import { AppLogo, AuthFooterLink, AuthHeading } from "@/components/atomic/molecu
 import { AuthPageShell } from "@/components/atomic/templates";
 import { useToast } from "@/components/providers/toast-provider";
 import { signup } from "@/lib/api/auth/signup.api";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 const signupSchema = z
   .object({
@@ -105,7 +106,7 @@ export function SignupForm({ role }: { role: "freelancer" | "client" }) {
         role: role.toUpperCase(),
       });
       toast.success('Email Sent Successfully');
-      router.push("/signup/otp-verification");
+      router.push(ROUTES.SIGNUP.OTP_VERIFICATION);
     } catch (err: unknown) {
       form.setError("root", {
         message: getErrorMessage(err, "Signup failed. Try again."),

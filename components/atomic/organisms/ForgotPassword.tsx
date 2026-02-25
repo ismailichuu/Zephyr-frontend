@@ -13,6 +13,7 @@ import { AppLogo, AuthHeading } from "@/components/atomic/molecules";
 import { AuthPageShell } from "@/components/atomic/templates";
 import { forgotPassword } from "@/lib/api/auth/forgot-password.api";
 import { useToast } from "@/components/providers/toast-provider";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -49,7 +50,7 @@ export function ForgotPassword() {
       setIsSubmitting(true);
       await forgotPassword(data.email);
       toast.success('Email Sent Successfully');
-      router.replace("/forgot-password/verification");
+      router.replace(ROUTES.FORGOT_PASSWORD.VERIFICATION);
     } catch (err: unknown) {
       setError("root", {
         message: getErrorMessage(err, "Forgot password failed. Try again."),

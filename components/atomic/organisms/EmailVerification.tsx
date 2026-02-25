@@ -12,6 +12,7 @@ import { verifyOtp } from "@/lib/api/auth/verify-otp.api";
 import { setUser } from "@/store/slices/user.slice";
 import { resendOtp } from "@/lib/api/auth/resend-otp.api";
 import { useToast } from "@/components/providers/toast-provider";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -53,7 +54,7 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
         router.replace(`/${user.role.toLowerCase()}`);
       } else {
         toast.success('Otp Verified Successfully');
-        router.replace("/forgot-password/reset");
+        router.replace(ROUTES.FORGOT_PASSWORD.RESET);
       }
     } catch (error: unknown) {
       setOtpError(getErrorMessage(error, "Invalid OTP. Please try again."));
@@ -143,7 +144,7 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
         </CardContent>
       </Card>
 
-      <Button variant="link" onClick={() => router.replace('/signup')} className="w-full gap-1 text-primary">
+      <Button variant="link" onClick={() => router.replace(ROUTES.SIGNUP.ROOT)} className="w-full gap-1 text-primary">
         <ArrowLeft className="h-4 w-4" />
         Back to Signup
       </Button>

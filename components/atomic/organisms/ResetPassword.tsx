@@ -12,6 +12,7 @@ import { AppLogo, AuthHeading } from "@/components/atomic/molecules";
 import { AuthPageShell } from "@/components/atomic/templates";
 import { useToast } from "@/components/providers/toast-provider";
 import { resetPassword } from "@/lib/api/auth/reset-password.api";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 const resetPasswordSchema = z
   .object({
@@ -53,7 +54,7 @@ export function ResetPassword() {
       setIsSubmitting(true);
       await resetPassword(data.password);
       toast.success("Password changed successfully");
-      router.replace("/signin");
+      router.replace(ROUTES.SIGN_IN.ROOT);
     } catch (err: unknown) {
       setError("root", {
         message: getErrorMessage(err, "Forgot password failed. Try again."),

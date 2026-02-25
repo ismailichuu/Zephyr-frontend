@@ -1,6 +1,7 @@
 ﻿"use client"
 import { Button } from "@/components/atomic/atoms";
 import { logOut } from "@/lib/api/auth/logout.api";
+import { ROUTES } from "@/lib/constants/routes.constants";
 import { clearUser } from "@/store/slices/user.slice";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,9 +18,9 @@ export default function ClientPage() {
     try {
       await logOut();
       dispatch(clearUser());
-      router.replace('/signin');
+      router.replace(ROUTES.SIGN_IN.ROOT);
     } catch (err) {
-      router.push('/signin');
+      router.push(ROUTES.SIGN_IN.ROOT);
     }
   }
 

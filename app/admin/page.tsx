@@ -14,7 +14,7 @@ export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
 
   const page = Number(params.page) || 1;
-  const limit = Number(params.limit) || 6;
+  const limit = Number(params.limit) || 3;
   const search = params.search || '';
 
   const res = await getAllUsers(page, limit, search);

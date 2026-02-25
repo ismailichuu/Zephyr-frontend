@@ -21,6 +21,7 @@ import {
 import { adminAction } from "@/lib/api/admin/admin-action.api";
 import { logOut } from "@/lib/api/auth/logout.api";
 import { clearUser } from "@/store/slices/user.slice";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 type ActivityItem = {
   id: string;
@@ -82,9 +83,9 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
     try {
       await logOut();
       dispatch(clearUser());
-      router.replace("/signin");
+      router.replace(ROUTES.SIGN_IN.ROOT);
     } catch {
-      router.replace("/signin");
+      router.replace(ROUTES.SIGN_IN.ROOT);
     }
   };
 
