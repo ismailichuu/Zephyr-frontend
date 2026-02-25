@@ -15,6 +15,7 @@ import { setUser } from "@/store/slices/user.slice";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/providers/toast-provider";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -50,7 +51,7 @@ export function LoginForm({ isAdmin = false }) {
   });
 
   function onGoogleSignIn() {
-    router.push("/signin/role-selection");
+    router.push(ROUTES.SIGN_IN.ROLE_SELECTION);
   }
 
   useEffect(() => {

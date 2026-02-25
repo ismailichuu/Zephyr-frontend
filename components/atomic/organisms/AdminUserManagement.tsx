@@ -42,6 +42,7 @@ import { useDispatch } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { adminAction } from "@/lib/api/admin/admin-action.api";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 type UserType = {
   userId: string;
@@ -78,9 +79,9 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
     try {
       await logOut();
       dispatch(clearUser());
-      router.replace("/signin");
+      router.replace(ROUTES.SIGN_IN.ROOT);
     } catch {
-      router.replace("/signin");
+      router.replace(ROUTES.SIGN_IN.ROOT);
     }
   };
 
@@ -98,7 +99,7 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
   };
 
   const handleGoToDetails = (userId: string) => {
-    router.push(`/admin/users/${userId}`);
+    router.push(ROUTES.ADMIN.USER_DETAILS.replace('[id]', userId));
   };
 
   const changePage = (pageNumber: number) => {
@@ -106,7 +107,7 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
     params.set("page", pageNumber.toString());
     params.set("search", input);
 
-    router.push(`/admin?${params.toString()}`, { scroll: false });
+    router.push(`${ROUTES.ADMIN.ROOT}?${params.toString()}`, { scroll: false });
   }
 
   useEffect(() => {
@@ -121,7 +122,7 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
 
       params.set("page", "1");
 
-      router.replace(`/admin?${params.toString()}`, { scroll: false });
+      router.replace(`${ROUTES.ADMIN.ROOT}?${params.toString()}`, { scroll: false });
     }, 500);
 
     return () => clearTimeout(timeout);

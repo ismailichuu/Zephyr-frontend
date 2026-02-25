@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Button } from "@/components/atomic/atoms";
 import { AppLogo, RoleOptionCard } from "@/components/atomic/molecules";
 import { AuthPageShell } from "@/components/atomic/templates";
+import { ROUTES } from "@/lib/constants/routes.constants";
 
 type Role = "client" | "freelancer";
 type RoleSelectorFlow = "signup" | "login";
@@ -41,7 +42,7 @@ export default function RoleSelector({ flow = "signup" }: { flow?: RoleSelectorF
       return;
     }
 
-    router.push(`/signup?role=${selectedRole}`);
+    router.push(`${ROUTES.SIGNUP.ROOT}?role=${selectedRole}`);
   };
 
   return (
@@ -70,7 +71,7 @@ export default function RoleSelector({ flow = "signup" }: { flow?: RoleSelectorF
         Continue
       </Button>
       {flow === "login" && (
-        <Button variant="link" className="w-full" onClick={() => router.replace("/signin")}>
+        <Button variant="link" className="w-full" onClick={() => router.replace(ROUTES.SIGN_IN.ROOT)}>
           Back to Sign In
         </Button>
       )}
