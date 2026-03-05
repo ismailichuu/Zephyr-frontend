@@ -20,9 +20,9 @@ export function GoogleAuthSection({
       </div>
       {showDivider && (
         <div className="relative flex items-center">
-          <div className="flex-grow border-t border-gray-300" />
+          <div className="grow border-t border-gray-300" />
           <span className="mx-3 text-xs text-muted-foreground">OR</span>
-          <div className="flex-grow border-t border-gray-300" />
+          <div className="grow border-t border-gray-300" />
         </div>
       )}
     </>

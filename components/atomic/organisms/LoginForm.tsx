@@ -85,7 +85,7 @@ export function LoginForm({ isAdmin = false }) {
   async function onLogin(values: LoginValues) {
     try {
       setIsSubmitting(true);
-      const { user } = await login(values.email, values.password);
+      const { user } = await login(values.email, values.password, isAdmin);
       dispatch(setUser(user));
       toast.success('Authenticated');
       router.replace(`/${String(user.role).toLowerCase()}`);

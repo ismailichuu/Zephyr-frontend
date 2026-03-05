@@ -1,9 +1,14 @@
 import axios from "axios";
 import api from "../axios";
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string, isAdmin: boolean) {
   try {
-    const res = await api.post('/auth/login', {email, password});
+    let res = null;
+    if (isAdmin) {
+      res = await api.post('/auth/admin/login', {email, password});
+    }else{
+      res = await api.post('/auth/login', {email, password});
+    }
     return res.data;
   } catch (error) {
      if (axios.isAxiosError(error)) {
