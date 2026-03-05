@@ -7,6 +7,7 @@ import {
   ShieldBan,
   Star,
   User,
+  ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -37,6 +38,9 @@ export type AdminUserDetailsData = {
   role: string;
   joinedAt: string | Date;
   status: string;
+  verified?: boolean;
+  isOtpVerified?: boolean;
+  isAdminApproved?: boolean;
   location?: string;
   completedJobs?: number;
   totalEarnings?: string;
@@ -78,6 +82,8 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<UserDetailsTab>("activity");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const onLogoutHandler = async () => {
     try {
@@ -90,8 +96,15 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
   };
 
   const isBlocked = user.status === "BLOCKED";
+  const isClient = user.role.toLowerCase() === "client";
+  const isVerified = Boolean(user.verified ?? user.isOtpVerified ?? user.isAdminApproved ?? false);
 
   const handleToggleBan = async () => {
+    if (!isBlocked && !showBlockConfirm) {
+      setShowBlockConfirm(true);
+      return;
+    }
+
     const nextStatus = isBlocked ? "ACTIVE" : "BLOCKED";
     setIsSubmitting(true);
 
@@ -102,6 +115,19 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
       console.error("User status update failed:", error);
     } finally {
       setIsSubmitting(false);
+      setShowBlockConfirm(false);
+    }
+  };
+
+  const handleVerifyClient = async () => {
+    setIsVerifying(true);
+    try {
+      await adminAction(user.userId, "VERIFY");
+      router.refresh();
+    } catch (error) {
+      console.error("Verify client error:", error);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -114,6 +140,7 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
           <AdminTopbar adminName="Admin" sectionTitle="User Details" />
 
           <section className="space-y-4 p-4 sm:space-y-6 sm:p-5 md:p-8">
+            <ArrowLeft className="size-5 cursor-pointer text-muted-foreground" onClick={() => router.back()} />
             <div className="bg-card flex items-center gap-2 overflow-x-auto rounded-lg border p-2 lg:hidden">
               {ADMIN_NAV_ITEMS.map((item) => (
                 <Button
@@ -146,24 +173,47 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
                 </p>
               </div>
 
-              <Button
-                type="button"
-                variant={isBlocked ? "outline" : "destructive"}
-                className="cursor-pointer rounded-full"
-                onClick={handleToggleBan}
-                disabled={isSubmitting}
-              >
-                <ShieldBan className="size-4" />
-                {isBlocked ? "Unban User" : "Ban User"}
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                {isClient && (
+                  <Button
+                    type="button"
+                    variant={isVerified ? "outline" : "default"}
+                    className="cursor-pointer rounded-full"
+                    onClick={handleVerifyClient}
+                    disabled={isVerified || isVerifying}
+                  >
+                    <User className="size-4" />
+                    {isVerified ? "Client Verified" : isVerifying ? "Verifying..." : "Verify Client"}
+                  </Button>
+                )}
+
+                <Button
+                  type="button"
+                  variant={isBlocked ? "outline" : "destructive"}
+                  className="cursor-pointer rounded-full"
+                  onClick={handleToggleBan}
+                  disabled={isSubmitting}
+                >
+                  <ShieldBan className="size-4" />
+                  {isBlocked ? "Unban User" : "Ban User"}
+                </Button>
+              </div>
             </div>
 
             <Card className="rounded-xl">
               <CardContent className="space-y-5 p-5 md:p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="bg-muted text-muted-foreground grid size-16 place-items-center rounded-full text-lg font-semibold">
-                      {getInitials(user.name) || "U"}
+                    <div className="relative">
+                      <div className="bg-muted text-muted-foreground grid size-16 place-items-center rounded-full text-lg font-semibold">
+                        {getInitials(user.name) || "U"}
+                      </div>
+                      {isClient && !isVerified && (
+                        <span
+                          className="absolute right-0 top-0 size-3 rounded-full bg-red-500 ring-2 ring-white"
+                          aria-label="Client not verified"
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -310,6 +360,36 @@ export default function AdminUserDetails({ user }: AdminUserDetailsProps) {
           </section>
         </main>
       </div>
+
+      {showBlockConfirm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+          <div className="bg-card w-full max-w-md rounded-lg border p-6 shadow-xl">
+            <h2 className="text-lg font-semibold">Confirm Ban User</h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Are you sure you want to ban {user.name}? They will lose access
+              until unbanned.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowBlockConfirm(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleToggleBan}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Banning..." : "Ban User"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

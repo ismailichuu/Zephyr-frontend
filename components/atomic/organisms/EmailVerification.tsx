@@ -138,9 +138,9 @@ export function EmailVerification({ isForgot = false }: { isForgot?: boolean }) 
               "Verify Email"
             )}
           </Button>
-      <div className="flex justify-center text-center">
-        <p className="text-green-500 text-xs">{message}</p>
-      </div>
+          <div className="flex justify-center text-center">
+            <p className="text-green-500 text-xs">{message}</p>
+          </div>
         </CardContent>
       </Card>
 

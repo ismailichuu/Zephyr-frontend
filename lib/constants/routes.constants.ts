@@ -16,7 +16,7 @@ export const ROUTES = {
    ADMIN: {
     ROOT: '/admin',
     USERS: '/admin/users',
-    USER_DETAILS: '/admin/user/[id]',
+    USER_DETAILS: '/admin/users/[id]',
    },
 
    CLIENT: {

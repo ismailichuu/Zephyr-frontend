@@ -43,6 +43,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { adminAction } from "@/lib/api/admin/admin-action.api";
 import { ROUTES } from "@/lib/constants/routes.constants";
+import { useToast } from "@/components/providers/toast-provider";
 
 type UserType = {
   userId: string;
@@ -51,6 +52,9 @@ type UserType = {
   role: string;
   joinedAt: Date;
   status: string;
+  verified?: boolean;
+  isOtpVerified?: boolean;
+  isAdminApproved?: boolean;
 };
 
 function getInitials(name: string) {
@@ -73,8 +77,12 @@ type AdminUserManagmentProps = {
 export default function AdminUserManagement({ users, totalPages, currentPage, totalUser }: AdminUserManagmentProps) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const toast = useToast();
 
   const [input, setInput] = useState('');
+  const [pendingBlockUser, setPendingBlockUser] = useState<UserType | null>(null);
+  const [isStatusSubmitting, setIsStatusSubmitting] = useState(false);
+  const [verifyingUserId, setVerifyingUserId] = useState<string | null>(null);
   const onLogoutHandler = async () => {
     try {
       await logOut();
@@ -89,17 +97,48 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
 
   const handleStatusToggle = async (user: UserType) => {
     const nextStatus = user.status === "BLOCKED" ? "ACTIVE" : "BLOCKED";
+    setIsStatusSubmitting(true);
 
     try {
       await adminAction(user.userId, nextStatus);
       router.refresh();
     } catch (error) {
       console.error("Admin action error:", error);
+    } finally {
+      setIsStatusSubmitting(false);
+      setPendingBlockUser(null);
     }
+  };
+
+  const handleBlockAction = (user: UserType) => {
+    if (user.status === "BLOCKED") {
+      handleStatusToggle(user);
+      return;
+    }
+
+    setPendingBlockUser(user);
   };
 
   const handleGoToDetails = (userId: string) => {
     router.push(ROUTES.ADMIN.USER_DETAILS.replace('[id]', userId));
+  };
+
+  const isClient = (role: string) => role.toLowerCase() === "client";
+
+  const isUserVerified = (user: UserType) =>
+    Boolean(user.verified ?? user.isAdminApproved ?? false);
+
+  const handleVerifyClient = async (user: UserType) => {
+    setVerifyingUserId(user.userId);
+    try {
+      await adminAction(user.userId, "VERIFY");
+      toast.success('Client verified successfully');
+      router.refresh();
+    } catch (error) {
+      console.error("Verify client error:", error);
+    } finally {
+      setVerifyingUserId(null);
+    }
   };
 
   const changePage = (pageNumber: number) => {
@@ -126,7 +165,7 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [input, router, searchParams])
+  }, [input])
 
   return (
     <div className="bg-muted/30 min-h-screen">
@@ -242,9 +281,17 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
                         <TableRow key={user.userId}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <span className="bg-muted text-muted-foreground grid size-7 place-items-center rounded-full text-xs font-medium">
-                                {getInitials(user.name)}
-                              </span>
+                              <div className="relative">
+                                <span className="bg-muted text-muted-foreground grid size-7 place-items-center rounded-full text-xs font-medium">
+                                  {getInitials(user.name)}
+                                </span>
+                                {isClient(user.role) && !isUserVerified(user) && (
+                                  <span
+                                    className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-red-500 ring-2 ring-white"
+                                    aria-label="Client not verified"
+                                  />
+                                )}
+                              </div>
                               <span className="font-medium">{user.name}</span>
                             </div>
                           </TableCell>
@@ -305,7 +352,7 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
                                       ? "cursor-pointer text-green-600 focus:text-green-700"
                                       : "cursor-pointer"
                                   }
-                                  onSelect={() => handleStatusToggle(user)}
+                                  onSelect={() => handleBlockAction(user)}
                                 >
                                   {user.status === "BLOCKED" ? (
                                     <UserCheck className="size-4" />
@@ -321,6 +368,24 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
                                       : "BLOCK"}
                                   </DropdownMenuShortcut>
                                 </DropdownMenuItem>
+
+                                {isClient(user.role) && (
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      if (!isUserVerified(user)) {
+                                        handleVerifyClient(user);
+                                      }
+                                    }}
+                                    disabled={isUserVerified(user) || verifyingUserId === user.userId}
+                                    className="cursor-pointer"
+                                  >
+                                    <UserCheck className="size-4" />
+                                    {isUserVerified(user) ? "Client Verified" : "Verify Client"}
+                                    <DropdownMenuShortcut>
+                                      {verifyingUserId === user.userId ? "..." : "VERIFY"}
+                                    </DropdownMenuShortcut>
+                                  </DropdownMenuItem>
+                                )}
 
                                 <DropdownMenuItem
                                   onSelect={() => handleGoToDetails(user.userId)}
@@ -369,6 +434,36 @@ export default function AdminUserManagement({ users, totalPages, currentPage, to
           </section>
         </main>
       </div>
+
+      {pendingBlockUser && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+          <div className="bg-card w-full max-w-md rounded-lg border p-6 shadow-xl">
+            <h2 className="text-lg font-semibold">Confirm Block User</h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Are you sure you want to block <strong>{pendingBlockUser.name}</strong>? They will
+              lose access until unblocked.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPendingBlockUser(null)}
+                disabled={isStatusSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => handleStatusToggle(pendingBlockUser)}
+                disabled={isStatusSubmitting}
+              >
+                {isStatusSubmitting ? "Blocking..." : "Block User"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
