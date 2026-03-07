@@ -1,9 +1,9 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export async function logOut() {
   try {
-    const res = await api.post('/auth/logout');
+    const res = await apiClient.post('/auth/logout');
     return res.data;
   } catch (error) {
      if (axios.isAxiosError(error)) {

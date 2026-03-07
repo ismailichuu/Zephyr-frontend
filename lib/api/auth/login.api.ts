@@ -1,13 +1,14 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export async function login(email: string, password: string, isAdmin: boolean) {
   try {
     let res = null;
+    console.log(isAdmin)
     if (isAdmin) {
-      res = await api.post('/auth/admin/login', {email, password});
+      res = await apiClient.post('/auth/admin/login', {email, password});
     }else{
-      res = await api.post('/auth/login', {email, password});
+      res = await apiClient.post('/auth/login', {email, password});
     }
     return res.data;
   } catch (error) {

@@ -1,9 +1,9 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export const resetPassword = async (password: string) => {
   try {
-    const res = await api.patch('auth/change-password', { password });
+    const res = await apiClient.patch('auth/change-password', { password });
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

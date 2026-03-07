@@ -1,5 +1,5 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export type ResendOtpResponse = {
   verified: boolean;
@@ -9,7 +9,7 @@ export type ResendOtpResponse = {
 export const resendOtp = async (): Promise<ResendOtpResponse> => {
   try {
     const sessionId = localStorage.getItem('otpSessionId');
-    const res = await api.post<ResendOtpResponse>(
+    const res = await apiClient.post<ResendOtpResponse>(
       "auth/resend-otp",
       { sessionId },
     );

@@ -1,9 +1,9 @@
 import axios from "axios";
-import api from "../axios"
+import apiClient from "../axios/client.instance.axios";
 
 export const adminAction = async (userId: string, action: string) => {
   try {
-    const res = await api.patch('/admin/user', {
+    const res = await apiClient.patch('/admin/user', {
       userId,
       action
     })

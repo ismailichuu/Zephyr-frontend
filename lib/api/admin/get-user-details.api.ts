@@ -1,8 +1,9 @@
 import axios from "axios";
-import api from "../axios";
+import { createServerApi } from "../axios/server.instance.axios";
 
 export const getUserDetails = async (userId: string) => {
   try {
+    const api = await createServerApi();
     const res = await api.get(`/admin/user/${userId}`);
     return res.data;
   } catch (error) {

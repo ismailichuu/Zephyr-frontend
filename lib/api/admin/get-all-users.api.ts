@@ -1,8 +1,9 @@
 import axios from "axios";
-import api from "../axios"
+import { createServerApi } from "../axios/server.instance.axios";
 
 export const getAllUsers = async (page: string | number, limit: string | number, search: string) => {
   try {
+    const api = await createServerApi();
     const res = await api.get(`/admin/user?page=${page}&limit=${limit}&search=${search}`);
     return res.data;
   } catch (error) {

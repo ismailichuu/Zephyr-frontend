@@ -1,5 +1,5 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export type SignupData = {
   name: string,
@@ -10,7 +10,7 @@ export type SignupData = {
 
 export const signup = async (data: SignupData) => {
   try {
-    const res = await api.post('auth/signup', data);
+    const res = await apiClient.post('auth/signup', data);
     const sessionId = res.data?.otpSessionId;
     console.log(res.data)
     localStorage.setItem('otpSessionId', sessionId);

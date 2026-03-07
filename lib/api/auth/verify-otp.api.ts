@@ -1,5 +1,5 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export type VerifyOtpResponse = {
   verified: boolean;
@@ -17,7 +17,7 @@ export const verifyOtp = async (
 ): Promise<VerifyOtpResponse> => {
   try {
     const otpSessionId = localStorage.getItem('otpSessionId');
-    const res = await api.post<VerifyOtpResponse>(
+    const res = await apiClient.post<VerifyOtpResponse>(
       "auth/verify-otp",
       { otp, otpSessionId, type }
     );

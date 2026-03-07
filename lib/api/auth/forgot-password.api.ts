@@ -1,9 +1,9 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export const forgotPassword = async (email: string) => {
   try {
-    const res = await api.post('auth/forgot-password', { email });
+    const res = await apiClient.post('auth/forgot-password', { email });
     const sessionId = res.data?.otpSessionId;
     localStorage.setItem('otpSessionId', sessionId);
     return res.data;

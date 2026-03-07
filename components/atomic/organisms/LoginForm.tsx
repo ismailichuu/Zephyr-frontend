@@ -85,6 +85,7 @@ export function LoginForm({ isAdmin = false }) {
   async function onLogin(values: LoginValues) {
     try {
       setIsSubmitting(true);
+      console.log(isAdmin)
       const { user } = await login(values.email, values.password, isAdmin);
       dispatch(setUser(user));
       toast.success('Authenticated');

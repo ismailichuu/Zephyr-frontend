@@ -1,8 +1,8 @@
 import axios from "axios";
-import api from "../axios";
+import apiClient from "../axios/client.instance.axios";
 
 export const googleLogin = async (isLogin = false, idToken: string, role?: string) => {
-  const res = await api.post("auth/google", {
+  const res = await apiClient.post("auth/google", {
     idToken,
     role,
     isLogin,
