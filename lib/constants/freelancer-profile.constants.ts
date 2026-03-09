@@ -10,7 +10,7 @@ export const FREELANCER_JOB_CATEGORIES = [
   },
   {
     id: "software-engineering",
-    label: "Software Engineering (Above Web Dev)",
+    label: "Software Engineering",
     subCategories: [
       "Software Engineer",
       "Senior Software Engineer",

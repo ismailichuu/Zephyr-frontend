@@ -88,9 +88,24 @@ export function attachInterceptor(api: AxiosInstance, options?: InterceptorOptio
     (response) => response,
     async (error) => {
       const originalRequest = (error.config ?? {}) as RetryRequestConfig;
-      const isRefreshCall = String(originalRequest.url ?? "").includes("/auth/refresh");
+      const requestUrl = String(originalRequest.url ?? "");
+      const isRefreshCall = requestUrl.includes("/auth/refresh");
+      const isAuthBypassCall =
+        requestUrl.includes("/auth/login") ||
+        requestUrl.includes("/auth/admin/login") ||
+        requestUrl.includes("/auth/signup") ||
+        requestUrl.includes("/auth/forgot-password") ||
+        requestUrl.includes("/auth/reset-password") ||
+        requestUrl.includes("/auth/verify-otp") ||
+        requestUrl.includes("/auth/resend-otp") ||
+        requestUrl.includes("/auth/logout");
 
-      if (error.response?.status !== 401 || originalRequest._retry || isRefreshCall) {
+      if (
+        error.response?.status !== 401 ||
+        originalRequest._retry ||
+        isRefreshCall ||
+        isAuthBypassCall
+      ) {
         return Promise.reject(error);
       }
 

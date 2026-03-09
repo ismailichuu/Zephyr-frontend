@@ -6,4 +6,5 @@ export { default as EmailVerification } from "./EmailVerification";
 export { default as ResetPassword } from "./ResetPassword";
 export { default as AdminUserManagement } from "./AdminUserManagement";
 export { default as AdminUserDetails } from "./AdminUserDetails";
+export { default as RoleProfilePortal } from "./RoleProfilePortal";
 export type { AdminUserDetailsData } from "./AdminUserDetails";
